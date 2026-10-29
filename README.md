@@ -4,13 +4,26 @@ This is an imperfect, incomplete collection of solutions, tools, protocols and t
 
 - [Sandboxing & Isolation](#sandboxing--isolation): ensure agents are isolated from each other, and the interfaces through which they interact with other systems are supervised and constrained
 - [Provenance, Instrumentation & Observability](#provenance-instrumentation--observability): ensure a privileged supervisor and/or a transparency log can prove or vouch for actions that agents are taking
-- [Secrets Management & Isolation](#secrets-management--isolation): ensure the agents and their potentially untrusted inputs, can never see the secrets they need (whcih are facilitated by a privileged component)
+- [Secrets Management & Isolation](#secrets-management--isolation): ensure the agents and their potentially untrusted inputs, can never see the secrets they need (which are facilitated by a privileged component)
 - [Agent Identity & Credentials](#agent-identity--credentials): help assign a credential to the agent that ideally binds the other security properties and allows the agent to continuously prove integrity and intent to other parties
+- [Evaluating Security Boundaries](#evaluating-security-boundaries)
 - [References and further reading](#references)
 
 **What this list is not:** entries that are about security _at_ runtime (as opposed to security _of the_ runtime), entries where the isolation relies on a shared kernel or a parent process supervisor in the same privilege level (Linux namespaces, process-based isolation), and entries that cover more general AI security topics (e.g., XPIA) are _not_ a great fit for _this_ list (there may be for other awesome lists!) because we focus squarely on isolation, sandboxing, attestable/transparent observability, secrets/credential isolation, workload identities, and AuthNZ protocols that put all of this together. We may still refer to such entries if some of their capabilities are illustrative for this problem space.
 
 ---
+
+## Evaluating Security Boundaries
+
+The categories group projects by their stated approaches; inclusion here is not an independent security audit. Tools in the same category can protect different assets against different threats. Before selecting a runtime, check:
+
+- **Isolation and privilege:** Identify whether the boundary uses a VM, an OS-enforced policy, or a same-privilege agent hook. Determine which process can change or disable the policy.
+- **Filesystem and network enforcement:** In a disposable workspace, verify that disallowed file reads and outbound connections fail, including when attempted by child processes. Record the observed result, not just the configured policy.
+- **Secrets:** Distinguish masking credentials in prompts or logs from preventing the agent process from reading them. Check destination restrictions, token scope, rotation, and revocation.
+- **Evidence:** Distinguish an activity log from a tamper-evident record or independently verifiable attestation. Check exactly which actions a signature covers and how a verifier obtains trusted keys.
+- **Failure modes:** Check whether access restrictions and credential mediation remain enforced when a policy engine, proxy, or supervisor is unavailable.
+
+Use synthetic data and test-only credentials, and note the tested project version, host OS, and configuration. This list does not imply that any of these checks have been run for a listed project.
 
 ## Sandboxing & Isolation
 
@@ -30,7 +43,7 @@ This is an imperfect, incomplete collection of solutions, tools, protocols and t
 | 🔥 [matchlock](https://github.com/jingkaihe/matchlock) | Firecracker, MicroVM, gVisor, secrets isolation | CLI and multi-language SDK for running agents in ephemeral Firecracker microVMs with host-boundary secret injection through a MITM proxy. |
 | 🔥 [Cleanroom](https://github.com/buildkite/cleanroom) | Firecracker, MicroVM, secrets isolation | Buildkite's self-hosted agent sandbox using Firecracker with host-side [gateway](https://github.com/buildkite/cleanroom/blob/main/docs/gateway.md) credential injection and digest-pinned OCI images. |
 | 🔥 [coop](https://github.com/trailofbits/coop) | Firecracker, KVM, Lima, Apple Virtualization, secrets isolation | Disposable VM environment for coding agents. Credential proxy keeps API keys outside the guest and is itself jailed with Landlock or Seatbelt. |
-| 🔥 [microsandbox](https://github.com/superradcompany/microsandbox) | KVM, libkrun, MicroVM, ecrets isolation | MicroVM sandbox for AI agents using [libkrun](https://github.com/containers/libkrun) with secret protection so credentials never enter the VM, Rust/Python/TypeScript SDKs |
+| 🔥 [microsandbox](https://github.com/superradcompany/microsandbox) | KVM, libkrun, MicroVM, secrets isolation | MicroVM sandbox for AI agents using [libkrun](https://github.com/containers/libkrun) with secret protection so credentials never enter the VM, Rust/Python/TypeScript SDKs |
 | 🔥 [CubeSandbox](https://github.com/TencentCloud/CubeSandbox) | KVM, RustVMM, MicroVM, secrets isolation, CoW snapshots | Hardware-isolated sandbox service for AI agents built on RustVMM + KVM with credential vault (keys never enter sandbox), CoW snapshot/clone/rollback, auto-pause/resume, and E2B SDK-compatible. |
 | 🔥 [boxlite](https://github.com/boxlite-labs/boxlite) | KVM, libkrun | Lightweight VM-based sandbox for coding agents using KVM virtualization via [libkrun](https://github.com/containers/libkrun), providing strong hardware-enforced isolation. |
 | 🔥 [brood-box](https://github.com/stacklok/brood-box) | KVM, libkrun, MicroVM, CoW snapshots | CLI for running AI coding agents (Claude Code, Codex, OpenCode) inside [libkrun](https://github.com/containers/libkrun) KVM microVMs with COW snapshot isolation, DNS-aware egress policies, and Cedar-based MCP authorization. Built on [go-microvm](https://github.com/stacklok/go-microvm). See also [waggle](https://github.com/stacklok/waggle), an MCP server exposing sandboxed code execution in disposable microVMs. |
